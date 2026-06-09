@@ -399,7 +399,25 @@
 
   show('start-screen');
 
-  // ── Start — called directly from onclick (real user gesture) ──
+  // ── Auto-start if permission already granted ──────────────────
+  // First scan: user must tap the button (needed to show the
+  // permission dialog). After granting once, every subsequent scan
+  // auto-opens the camera immediately — no tap needed.
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'camera' })
+      .then(function(result) {
+        if (result.state === 'granted') {
+          handleStart();
+        }
+        // 'prompt' → first time, stay on start screen
+        // 'denied' → stay on start screen so user sees fix instructions
+      })
+      .catch(function() {
+        // permissions API unavailable — stay on start screen, user taps manually
+      });
+  }
+
+  // ── Start — called from onclick OR auto-start above ───────────
   function handleStart() {
     var btn = document.getElementById('btn-start');
     btn.disabled = true;
