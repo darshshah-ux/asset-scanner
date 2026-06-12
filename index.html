@@ -3,208 +3,311 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Asset QR Scanner</title>
-  <link href="https://db.onlinewebfonts.com/c/1dc7840abb13fcda12aa8d1cb21fb832?family=Agrandir" rel="stylesheet">
-  <link href="https://db.onlinewebfonts.com/c/313f02964c8d44206a2182575daa4233?family=Agrandir+Narrow+Bold" rel="stylesheet">
-  <link href="https://db.onlinewebfonts.com/c/a4c4b3dfebb8bccf5f55af36e5ba4b4f?family=Agrandir+Grand+Heavy" rel="stylesheet">
+  <title>Asset Location Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <style>
+    /* ── HelloFresh Brand Tokens ── */
     :root {
-      --lime:       #96DC14;
-      --green:      #067A46;
-      --black:      #232323;
-      --white:      #FFFFFF;
-      --lime-dark:  #7bbf0f;
-      --lime-light: #edfac7;
-      --green-dark: #055c35;
-      --font:       'Agrandir', 'Trebuchet MS', sans-serif;
-      --font-bold:  'Agrandir Narrow Bold', 'Agrandir', sans-serif;
-      --font-heavy: 'Agrandir Grand Heavy', 'Agrandir Narrow Bold', sans-serif;
+      --lime:        #96DC14;
+      --green:       #067A46;
+      --cream:       #FEF8F0;
+      --black:       #232323;
+      --white:       #FFFFFF;
+      --lime-dark:   #7bbf0f;
+      --lime-light:  #edfac7;
+      --green-dark:  #055c35;
+      --green-light: #e6f4ed;
+      --cream-dark:  #e8dfd3;
+      --text-muted:  #6b7280;
+      --border:      #dde3d8;
+      --font:        'Nunito', 'Trebuchet MS', sans-serif;
+      --radius:      12px;
+      --shadow-sm:   0 1px 3px rgba(35,35,35,0.08), 0 2px 8px rgba(35,35,35,0.06);
+      --shadow-md:   0 4px 20px rgba(35,35,35,0.10);
+
+      /* ── API config ── */
+      --api-url:   'https://script.google.com/a/hellofresh.ca/macros/s/AKfycbxEPE_tVKuMTHvIhUvQhJqX6PheJIZp2nFwhndSvUNwj38Jp4OczuGe43iIP6QpenIZ/exec';
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      width: 100%; height: 100%;
-      background: #000;
+    body {
       font-family: var(--font);
-      overflow: hidden;
-      color: var(--white);
-    }
-
-    /* ═══════════════════════════
-       SCREEN 1 — Tap to start
-    ═══════════════════════════ */
-    #start-screen {
-      position: fixed;
-      inset: 0;
       background: var(--green);
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 20px 16px 32px;
+      position: relative;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 40px 28px;
-      text-align: center;
-      z-index: 100;
     }
 
-    #start-screen::before {
+    body::before {
       content: '';
-      position: absolute;
+      position: fixed;
       top: -80px; right: -80px;
-      width: 260px; height: 260px;
+      width: 320px; height: 320px;
       background: var(--lime);
       border-radius: 50%;
       opacity: 0.12;
       pointer-events: none;
     }
 
-    #start-screen::after {
+    body::after {
       content: '';
-      position: absolute;
+      position: fixed;
       bottom: -60px; left: -60px;
-      width: 200px; height: 200px;
+      width: 240px; height: 240px;
       background: var(--lime);
       border-radius: 50%;
       opacity: 0.08;
       pointer-events: none;
     }
 
-    .start-ring {
-      width: 110px; height: 110px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      border: 2px solid rgba(150,220,20,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      margin-bottom: 28px;
-      position: relative; z-index: 1;
-      animation: ringPulse 2.5s ease-in-out infinite;
-    }
-
-    @keyframes ringPulse {
-      0%,100% { box-shadow: 0 0 0 0    rgba(150,220,20,0.3); }
-      50%      { box-shadow: 0 0 0 16px rgba(150,220,20,0);   }
-    }
-
-    .start-title {
-      font-family: var(--font-heavy);
-      font-size: 26px; font-weight: 800;
-      color: var(--white);
-      letter-spacing: -0.02em; line-height: 1.2;
-      margin-bottom: 10px;
-      position: relative; z-index: 1;
-    }
-
-    .start-sub {
-      font-size: 14px; color: rgba(255,255,255,0.62);
-      font-weight: 600; line-height: 1.6;
-      max-width: 280px; margin-bottom: 36px;
-      position: relative; z-index: 1;
-    }
-
-    #btn-start {
-      position: relative; z-index: 1;
-      background: var(--lime); color: var(--black);
-      border: none; border-radius: 14px;
-      padding: 18px 36px; font-size: 17px;
-      font-weight: 800; font-family: var(--font-bold);
-      cursor: pointer;
-      display: flex; align-items: center; gap: 10px;
-      min-width: 230px; justify-content: center;
-      box-shadow: 0 6px 24px rgba(150,220,20,0.35);
-      -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.15s;
-    }
-    #btn-start:active   { opacity: 0.85; }
-    #btn-start:disabled { background: #aaa; box-shadow: none; }
-
-    .start-note {
-      position: relative; z-index: 1;
-      margin-top: 16px; font-size: 11px;
-      color: rgba(255,255,255,0.38); font-weight: 600;
-    }
-
-    .start-cancel {
-      position: relative; z-index: 1;
-      margin-top: 12px; background: none;
-      border: 2px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.55);
-      border-radius: 10px; padding: 10px 24px;
-      font-size: 13px; font-weight: 700;
-      font-family: var(--font-bold); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* ═══════════════════════════
-       SCREEN 2 — Camera
-    ═══════════════════════════ */
-    #camera-layer {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #000;  /* solid black behind video while it loads */
-      z-index: 50;
-    }
-    #camera-layer.active { display: block; }
-
-    /* Video fills the entire screen — no bleed-through */
-    video {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-      background: #000;
+    /* ── Main card ── */
+    .main-card {
+      background: var(--cream);
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 12px 48px rgba(6,122,70,0.30), 0 2px 8px rgba(35,35,35,0.10);
+      position: relative;
       z-index: 1;
     }
 
-    #qr-canvas { display: none; }
+    /* ── Logo ── */
+    .logo-wrap { text-align: center; margin-bottom: 10px; }
+    .logo-wrap img { height: 56px; width: auto; }
 
-    /* Overlay masks sit above video */
-    .ov {
+    /* ── Title ── */
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--black);
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: var(--green); }
+
+    /* ── Step cards ── */
+    .step-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .step-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--green);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .step-title::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--lime);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Inputs ── */
+    input[type="text"], select {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 16px; /* prevents iOS zoom */
+      font-family: var(--font);
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--black);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(6,122,70,0.10);
+    }
+
+    input::placeholder { color: #bbb; font-weight: 600; }
+    select { cursor: pointer; }
+
+    /* ── Rows ── */
+    .sheet-row { display: flex; gap: 10px; align-items: center; }
+    .sheet-row input { flex: 1; }
+    .scan-row  { display: flex; gap: 10px; align-items: center; }
+    .scan-row input { flex: 1; }
+
+    .scan-input { font-size: 18px !important; font-weight: 700 !important; }
+
+    #sheetStatus {
+      font-size: 12px; font-weight: 700;
+      margin-top: 8px; display: block; min-height: 16px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 11px 18px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--font);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:hover  { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(6,122,70,0.30); }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-camera {
+      width: 100%;
+      justify-content: center;
+      margin-top: 10px;
+      padding: 13px 18px;
+      font-size: 15px;
+      background: var(--lime);
+      color: var(--black);
+    }
+    .btn-camera:hover { background: var(--lime-dark); box-shadow: 0 4px 14px rgba(150,220,20,0.35); }
+
+    .btn-check {
+      padding: 13px 18px;
+      font-size: 15px;
+    }
+
+    .reload-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .reload-btn {
+      background: none; border: 2px solid var(--green);
+      color: var(--green); padding: 6px 14px;
+      border-radius: 8px; font-size: 12px; font-weight: 800;
+      font-family: var(--font); cursor: pointer; transition: all 0.2s;
+    }
+    .reload-btn:hover { background: var(--green); color: var(--white); }
+
+    /* ── Scanner auto-submit flash ── */
+    @keyframes scanFlash {
+      0%   { background: var(--lime-light); border-color: var(--lime-dark); }
+      100% { background: var(--white);      border-color: var(--green); }
+    }
+    .scan-flash { animation: scanFlash 0.3s ease-out forwards; }
+
+    .scan-status {
+      display: none;
+      font-size: 11px; font-weight: 800;
+      color: var(--green-dark);
+      background: var(--lime-light);
+      border: 1px solid var(--lime-dark);
+      border-radius: 20px;
+      padding: 3px 10px;
+      margin-top: 7px; text-align: center;
+    }
+    .scan-status.visible { display: block; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: none; text-align: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted); margin-top: 10px;
+    }
+
+    /* ── Result ── */
+    #result {
+      margin-top: 12px; padding: 13px 16px;
+      border-radius: 10px; font-size: 14px;
+      font-weight: 700; text-align: center;
+      display: none; line-height: 1.5;
+    }
+    .success { background: var(--green-light); color: var(--green-dark); border: 1px solid #a8dab5; }
+    .warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+    .error   { background: #fff5f5; color: #c0392b; border: 1px solid #fdd; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 18px; font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.55); text-align: center;
+      position: relative; z-index: 1;
+    }
+
+    /* ════════════════════════════════════════
+       CAMERA MODAL — fullscreen overlay
+    ════════════════════════════════════════ */
+    #camera-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: #000;
+      z-index: 1000;
+    }
+    #camera-modal.open { display: block; }
+
+    #cam-video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block; background: #000; z-index: 1;
+    }
+    #cam-canvas { display: none; }
+
+    .cam-ov {
       position: absolute;
       background: rgba(0,0,0,0.55);
-      pointer-events: none;
-      z-index: 2;
+      pointer-events: none; z-index: 2;
     }
-    #ov-top    { top:0; left:0; right:0; }
-    #ov-bottom { bottom:0; left:0; right:0; }
-    #ov-left   { left:0; }
-    #ov-right  { right:0; }
+    #cam-ov-top    { top:0; left:0; right:0; }
+    #cam-ov-bottom { bottom:0; left:0; right:0; }
+    #cam-ov-left   { left:0; }
+    #cam-ov-right  { right:0; }
 
-    /* Scan window sits above overlays */
-    #scan-win {
+    #cam-scan-win {
       position: absolute;
-      border-radius: 12px;
-      overflow: hidden;
+      border-radius: 12px; overflow: hidden;
       box-shadow: 0 0 0 2px var(--lime), 0 0 22px rgba(150,220,20,0.3);
-      transition: box-shadow 0.2s;
-      z-index: 3;
+      transition: box-shadow 0.2s; z-index: 3;
     }
-    #scan-win.found {
+    #cam-scan-win.found {
       box-shadow: 0 0 0 4px var(--lime), 0 0 48px rgba(150,220,20,0.8);
     }
-    #scan-win::before, #scan-win::after {
-      content: '';
-      position: absolute;
+    #cam-scan-win::before, #cam-scan-win::after {
+      content: ''; position: absolute;
       width: 26px; height: 26px;
       border-color: var(--lime); border-style: solid;
     }
-    #scan-win::before { top:-2px; left:-2px; border-width:3px 0 0 3px; border-radius:10px 0 0 0; }
-    #scan-win::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 10px 0; }
+    #cam-scan-win::before { top:-2px; left:-2px; border-width:3px 0 0 3px; border-radius:10px 0 0 0; }
+    #cam-scan-win::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 10px 0; }
 
-    .scan-line {
+    .cam-scan-line {
       position: absolute; left:0; right:0; height:2px;
       background: linear-gradient(90deg, transparent, var(--lime), transparent);
-      animation: scanAnim 2s ease-in-out infinite;
-      opacity: 0.85;
+      animation: camScan 2s ease-in-out infinite; opacity: 0.85;
     }
-    @keyframes scanAnim { 0%{top:8%} 50%{top:88%} 100%{top:8%} }
+    @keyframes camScan { 0%{top:8%} 50%{top:88%} 100%{top:8%} }
 
-    .top-bar {
+    .cam-top-bar {
       position: absolute; top:0; left:0; right:0;
       padding: 18px 20px;
       padding-top: calc(18px + env(safe-area-inset-top));
@@ -212,300 +315,400 @@
       background: linear-gradient(to bottom, rgba(0,0,0,0.72), transparent);
       z-index: 10;
     }
-    .top-title { font-family:var(--font-heavy); font-size:17px; font-weight:800; color:var(--white); letter-spacing:-0.01em; }
-    .top-sub   { font-size:11px; color:rgba(255,255,255,0.58); font-weight:600; margin-top:2px; }
+    .cam-title { font-family: var(--font); font-size:17px; font-weight:900; color:var(--white); letter-spacing:-0.01em; }
+    .cam-sub   { font-size:11px; color:rgba(255,255,255,0.58); font-weight:600; margin-top:2px; }
 
-    .close-btn {
+    .cam-close {
       background: rgba(255,255,255,0.15);
       border: 1px solid rgba(255,255,255,0.2);
-      color: var(--white);
-      width:38px; height:38px; border-radius:50%;
-      font-size:16px; font-weight:800; font-family:var(--font-bold);
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      -webkit-tap-highlight-color:transparent; z-index:10;
+      color: var(--white); width:38px; height:38px;
+      border-radius:50%; font-size:16px; font-weight:800;
+      font-family: var(--font); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      -webkit-tap-highlight-color:transparent;
     }
 
-    .bottom-bar {
+    .cam-bottom-bar {
       position:absolute; bottom:0; left:0; right:0;
       padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
       background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-      z-index: 10;
-      display:flex; flex-direction:column; align-items:center; gap:10px;
+      z-index:10; display:flex; flex-direction:column; align-items:center; gap:10px;
     }
 
-    .status-pill {
+    .cam-pill {
       display:flex; align-items:center; gap:8px;
-      background:rgba(0,0,0,0.55);
-      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15);
       border-radius:30px; padding:8px 16px;
-      font-size:12px; font-weight:700; font-family:var(--font-bold);
-      color:rgba(255,255,255,0.75);
-      backdrop-filter:blur(6px);
-      transition:all 0.3s;
+      font-size:12px; font-weight:700; font-family:var(--font);
+      color:rgba(255,255,255,0.75); backdrop-filter:blur(6px); transition:all 0.3s;
     }
-    .status-pill.scanning { border-color:rgba(150,220,20,0.45); }
-    .status-pill.found    { background:var(--green); border-color:var(--lime); color:var(--white); transform:scale(1.04); }
+    .cam-pill.scanning { border-color:rgba(150,220,20,0.45); }
+    .cam-pill.found    { background:var(--green); border-color:var(--lime); color:var(--white); transform:scale(1.04); }
 
-    .status-dot {
+    .cam-dot {
       width:8px; height:8px; border-radius:50%;
       background:rgba(255,255,255,0.35); flex-shrink:0;
     }
-    .status-pill.scanning .status-dot { background:var(--lime); animation:dot 1.2s ease-in-out infinite; }
-    .status-pill.found    .status-dot { background:var(--lime); }
+    .cam-pill.scanning .cam-dot { background:var(--lime); animation:dot 1.2s ease-in-out infinite; }
+    .cam-pill.found    .cam-dot { background:var(--lime); }
     @keyframes dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
 
-    .hint {
-      font-size:13px; font-weight:700; font-family:var(--font-bold);
-      color:rgba(255,255,255,0.68); text-align:center;
-    }
+    .cam-hint { font-size:13px; font-weight:700; font-family:var(--font); color:rgba(255,255,255,0.68); text-align:center; }
 
-    #flash {
+    #cam-flash {
       display:none; position:absolute; inset:0;
       background:rgba(150,220,20,0.22);
       pointer-events:none; z-index:5;
     }
     @keyframes flashFade { 0%{opacity:1} 100%{opacity:0} }
-    #flash.active { display:block; animation:flashFade 0.45s ease-out forwards; }
+    #cam-flash.active { display:block; animation:flashFade 0.45s ease-out forwards; }
 
-    /* ═══════════════════════════
-       SCREEN 3 — Permission denied
-    ═══════════════════════════ */
-    #perm-screen {
-      display: none;
-      position: fixed; inset: 0;
-      background: var(--green);
-      flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px 24px; text-align: center; gap: 14px;
-      z-index: 200;
+    /* ── Responsive ── */
+    @media (min-width: 600px) {
+      body { justify-content: center; min-height: 100vh; padding: 40px 24px; }
+      .main-card { padding: 36px 32px; }
     }
-    #perm-screen.visible { display: flex; }
-
-    .perm-icon  { font-size:52px; line-height:1; }
-    .perm-title { font-family:var(--font-heavy); font-size:22px; font-weight:800; color:var(--white); letter-spacing:-0.02em; }
-    .perm-body  { font-size:14px; color:rgba(255,255,255,0.7); font-weight:600; line-height:1.6; max-width:300px; }
-
-    .perm-steps {
-      background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.15);
-      border-radius:12px; padding:14px 16px;
-      text-align:left; max-width:300px; width:100%;
-    }
-    .perm-steps-title {
-      font-size:11px; font-weight:800; font-family:var(--font-bold);
-      text-transform:uppercase; letter-spacing:0.06em;
-      color:var(--lime); margin-bottom:10px;
-    }
-    .perm-step {
-      display:flex; gap:10px; align-items:flex-start;
-      margin-bottom:8px; font-size:13px; font-weight:600;
-      color:rgba(255,255,255,0.82); line-height:1.4;
-    }
-    .perm-step:last-child { margin-bottom:0; }
-    .perm-num {
-      width:20px; height:20px; border-radius:50%;
-      background:var(--lime); color:var(--black);
-      font-size:11px; font-weight:800;
-      display:flex; align-items:center; justify-content:center;
-      flex-shrink:0; margin-top:1px;
-    }
-
-    .btn-retry {
-      background:var(--lime); color:var(--black); border:none;
-      border-radius:10px; padding:14px 28px;
-      font-size:15px; font-weight:800; font-family:var(--font-bold);
-      cursor:pointer; min-width:200px;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .btn-retry:active { opacity:0.85; }
-
-    .btn-cancel-perm {
-      background:none; border:2px solid rgba(255,255,255,0.22);
-      color:rgba(255,255,255,0.6); border-radius:10px;
-      padding:10px 24px; font-size:13px; font-weight:700;
-      font-family:var(--font-bold); cursor:pointer;
-      -webkit-tap-highlight-color:transparent;
+    @media (max-width: 480px) {
+      .sheet-row { flex-direction: column; }
+      .sheet-row input { width: 100%; }
+      .scan-row  { flex-direction: column; }
+      .scan-row input { width: 100%; }
+      .btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
-  <!-- SCREEN 1: Tap to start -->
-  <div id="start-screen">
-    <div class="start-ring">📷</div>
-    <div class="start-title">Scan Asset QR Code</div>
-    <div class="start-sub">Tap the button to open your camera and scan an asset label QR code.</div>
-    <button id="btn-start" onclick="handleStart()">
-      <span>📷</span> Tap to Open Camera
+<!-- ── Main app ── -->
+<div class="main-card">
+
+  <div class="logo-wrap">
+    <!-- Replace src with your actual hosted logo URL -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/HelloFresh_Logo.svg/320px-HelloFresh_Logo.svg.png" alt="HelloFresh" />
+  </div>
+
+  <h1>Asset <span>Location</span> Checker</h1>
+
+  <!-- Step 1 -->
+  <div class="step-card">
+    <div class="step-title">Step 1 — Spreadsheet ID</div>
+    <div class="sheet-row">
+      <input type="text" id="sheetId" placeholder="Paste Sheet ID or Google Sheets link..." />
+      <button class="btn" id="loadBtn" onclick="loadSheet()">📂 Load</button>
+    </div>
+    <small id="sheetStatus"></small>
+    <div class="reload-row">
+      <button class="reload-btn" onclick="loadSheet()">🔄 Reload Sheet</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-card">
+    <div class="step-title">Step 2 — Select Location</div>
+    <select id="location">
+      <option value="">-- Loading locations... --</option>
+    </select>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step-card">
+    <div class="step-title">Step 3 — Scan Asset Tag</div>
+    <div class="scan-row">
+      <input type="text" class="scan-input" id="assetTag"
+             placeholder="Type or scan asset tag..."
+             autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false" />
+      <button class="btn btn-check" id="submitBtn" onclick="submitForm()">✅ Check</button>
+    </div>
+    <button class="btn btn-camera" id="cameraBtn" onclick="openCamera()">
+      📷 Scan with Camera
     </button>
-    <div class="start-note">🔒 Your browser will ask to allow camera access</div>
-    <button class="start-cancel" onclick="handleCancel()">Cancel</button>
-  </div>
-
-  <!-- SCREEN 2: Camera viewfinder -->
-  <div id="camera-layer">
-    <video id="video" playsinline autoplay muted></video>
-    <canvas id="qr-canvas"></canvas>
-
-    <div class="ov" id="ov-top"></div>
-    <div class="ov" id="ov-bottom"></div>
-    <div class="ov" id="ov-left"></div>
-    <div class="ov" id="ov-right"></div>
-
-    <div id="scan-win"><div class="scan-line"></div></div>
-
-    <div class="top-bar">
-      <div>
-        <div class="top-title">📷 Scan Asset QR</div>
-        <div class="top-sub">Point at the QR code on the asset label</div>
-      </div>
-      <button class="close-btn" onclick="handleCancel()">✕</button>
+    <div class="scan-status" id="scanStatus">⚡ Scanner detected — submitting automatically</div>
+    <div class="scan-status" id="cameraStatus" style="background:var(--green-light);border-color:var(--green);color:var(--green-dark);">
+      📷 QR scanned — submitting...
     </div>
+    <div class="spinner" id="spinner">⏳ Processing...</div>
+    <div id="result"></div>
+  </div>
 
-    <div class="bottom-bar">
-      <div class="status-pill scanning" id="status-pill">
-        <div class="status-dot"></div>
-        <span id="status-text">Scanning...</span>
-      </div>
-      <div class="hint">Hold steady — auto-submits when detected</div>
+</div>
+
+<div class="footer">🌐 Asset Location Checker v2.0</div>
+
+<!-- ── Camera Modal ── -->
+<div id="camera-modal">
+  <video id="cam-video" playsinline autoplay muted></video>
+  <canvas id="cam-canvas"></canvas>
+
+  <div class="cam-ov" id="cam-ov-top"></div>
+  <div class="cam-ov" id="cam-ov-bottom"></div>
+  <div class="cam-ov" id="cam-ov-left"></div>
+  <div class="cam-ov" id="cam-ov-right"></div>
+
+  <div id="cam-scan-win"><div class="cam-scan-line"></div></div>
+
+  <div class="cam-top-bar">
+    <div>
+      <div class="cam-title">📷 Scan Asset QR</div>
+      <div class="cam-sub">Point at the QR code on the asset label</div>
     </div>
-
-    <div id="flash"></div>
+    <button class="cam-close" onclick="closeCamera()">✕</button>
   </div>
 
-  <!-- SCREEN 3: Permission denied -->
-  <div id="perm-screen">
-    <div class="perm-icon" id="perm-icon">🔒</div>
-    <div class="perm-title" id="perm-title">Camera Permission Denied</div>
-    <div class="perm-body">Follow these steps to allow camera access:</div>
-    <div class="perm-steps" id="perm-steps"></div>
-    <button class="btn-retry" onclick="handleStart()">Try Again</button>
-    <button class="btn-cancel-perm" onclick="handleCancel()">Cancel</button>
+  <div class="cam-bottom-bar">
+    <div class="cam-pill scanning" id="cam-pill">
+      <div class="cam-dot"></div>
+      <span id="cam-text">Scanning...</span>
+    </div>
+    <div class="cam-hint">Hold steady — auto-submits when detected</div>
   </div>
+
+  <div id="cam-flash"></div>
+</div>
 
 <script>
-  var params    = new URLSearchParams(window.location.search);
-  var originUrl = params.get('origin') || '';
-  var stream    = null;
-  var rafId     = null;
-  var scanning  = false;
+  // ══════════════════════════════════════════════════════
+  // CONFIG — update API_URL if you redeploy Apps Script
+  // ══════════════════════════════════════════════════════
+  var API_URL   = 'https://script.google.com/a/hellofresh.ca/macros/s/AKfycbxEPE_tVKuMTHvIhUvQhJqX6PheJIZp2nFwhndSvUNwj38Jp4OczuGe43iIP6QpenIZ/exec';
+  var API_TOKEN = 'HF-ASSET-2024-XK9-DAR$H';
 
-  // ── Screen switcher ───────────────────────────────────────────
-  // Explicitly sets each screen — no bleed-through from hidden layers
-  function show(id) {
-    document.getElementById('start-screen').style.display = (id === 'start-screen') ? 'flex' : 'none';
-    document.getElementById('perm-screen').style.display  = (id === 'perm-screen')  ? 'flex' : 'none';
-    document.getElementById('camera-layer').className     = (id === 'camera-layer') ? 'active' : '';
+  var sheetReady = false;
+  var camStream  = null;
+  var camRafId   = null;
+  var camActive  = false;
+
+  // ── API helper ────────────────────────────────────────
+  function api(action, extra) {
+    var body = Object.assign({ action: action, token: API_TOKEN }, extra || {});
+    return fetch(API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body)
+    }).then(function(r) { return r.json(); });
   }
 
-  show('start-screen');
+  // ── Sheet ID extractor ────────────────────────────────
+  function extractSheetId(value) {
+    var trimmed = String(value || '').trim();
+    var match   = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : trimmed;
+  }
 
-  // ── Auto-start if permission already granted ──────────────────
-  // First scan: user must tap the button (needed to show the
-  // permission dialog). After granting once, every subsequent scan
-  // auto-opens the camera immediately — no tap needed.
-  if (navigator.permissions) {
-    navigator.permissions.query({ name: 'camera' })
-      .then(function(result) {
-        if (result.state === 'granted') {
-          handleStart();
-        }
-        // 'prompt' → first time, stay on start screen
-        // 'denied' → stay on start screen so user sees fix instructions
-      })
-      .catch(function() {
-        // permissions API unavailable — stay on start screen, user taps manually
+  // ── Load locations on page start ─────────────────────
+  api('getLocations').then(function(res) {
+    var sel = document.getElementById('location');
+    if (res.success && res.locations) {
+      sel.innerHTML = '<option value="">-- Select Location --</option>';
+      res.locations.forEach(function(loc) {
+        var opt = document.createElement('option');
+        opt.value = opt.textContent = loc;
+        sel.appendChild(opt);
       });
-  }
+    } else {
+      sel.innerHTML = '<option value="">Failed to load locations</option>';
+    }
+  }).catch(function() {
+    document.getElementById('location').innerHTML =
+      '<option value="">Failed to load locations</option>';
+  });
 
-  // ── Start — called from onclick OR auto-start above ───────────
-  function handleStart() {
-    var btn = document.getElementById('btn-start');
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> Opening camera...';
+  // ── Load sheet ────────────────────────────────────────
+  function loadSheet() {
+    var raw      = document.getElementById('sheetId').value;
+    var sheetId  = extractSheetId(raw);
+    var statusEl = document.getElementById('sheetStatus');
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showPermError({ name: 'NotFoundError' });
-      resetBtn(); return;
+    if (!sheetId) {
+      statusEl.style.color = '#c0392b';
+      statusEl.textContent = '⚠️ Please enter a Spreadsheet ID.';
+      return;
     }
 
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    })
-    .then(function(s) {
-      stream = s;
-      var video = document.getElementById('video');
-      video.srcObject = stream;
-      video.play();
-      show('camera-layer');
-      layoutWindow();
-      scanning = true;
-      setStatus('scanning', 'Scanning...');
-      rafId = requestAnimationFrame(tick);
-      resetBtn();
-    })
-    .catch(function(err) {
-      resetBtn();
-      showPermError(err);
+    statusEl.style.color = '#6b7280';
+    statusEl.textContent = '⏳ Loading sheet...';
+    document.getElementById('loadBtn').disabled = true;
+    sheetReady = false;
+
+    api('initSheet', { sheetId: sheetId }).then(function(res) {
+      document.getElementById('loadBtn').disabled = false;
+      if (res.success) {
+        sheetReady = true;
+        statusEl.style.color = '#067A46';
+        statusEl.textContent = res.message;
+        document.getElementById('assetTag').focus();
+      } else {
+        statusEl.style.color = '#c0392b';
+        statusEl.textContent = res.message;
+      }
+    }).catch(function(err) {
+      document.getElementById('loadBtn').disabled = false;
+      statusEl.style.color = '#c0392b';
+      statusEl.textContent = '🚨 Network error — check your connection.';
     });
   }
 
-  function resetBtn() {
-    var btn = document.getElementById('btn-start');
-    btn.disabled = false;
-    btn.innerHTML = '<span>📷</span> Tap to Open Camera';
+  // ── Submit ────────────────────────────────────────────
+  function submitForm() {
+    if (!sheetReady) return showResult('Please load the sheet first.', 'error');
+    var sheetId  = extractSheetId(document.getElementById('sheetId').value);
+    var location = document.getElementById('location').value;
+    var assetTag = document.getElementById('assetTag').value.trim();
+
+    document.getElementById('result').style.display = 'none';
+    if (!location) return showResult('Please select a location.', 'error');
+    if (!assetTag) return showResult('Please scan or enter an Asset Tag.', 'error');
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('assetTag').disabled  = true;
+    document.getElementById('location').disabled  = true;
+    document.getElementById('spinner').style.display = 'block';
+
+    api('processAsset', {
+      sheetId:  sheetId,
+      assetTag: assetTag,
+      location: location
+    }).then(function(response) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('assetTag').disabled  = false;
+      document.getElementById('location').disabled  = false;
+      showResult(response.message,
+        !response.success ? 'error' : response.match ? 'success' : 'warning');
+      document.getElementById('assetTag').value = '';
+      document.getElementById('assetTag').focus();
+    }).catch(function(err) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('assetTag').disabled  = false;
+      document.getElementById('location').disabled  = false;
+      showResult('🚨 Network error — check your connection.', 'error');
+    });
   }
 
-  // ── Cancel ────────────────────────────────────────────────────
-  function handleCancel() {
-    stopCamera();
-    if (window.opener) {
-      window.opener.postMessage({ type: 'SCANNER_CANCEL' }, '*');
+  function showResult(message, type) {
+    var d = document.getElementById('result');
+    d.className = type; d.textContent = message; d.style.display = 'block';
+  }
+
+  // ── Hardware scanner auto-submit ──────────────────────
+  var scanBuffer = '', lastKeyTime = 0, scanTimer = null;
+  var assetInput = document.getElementById('assetTag');
+
+  assetInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(scanTimer);
+      scanBuffer = ''; lastKeyTime = 0;
+      submitForm();
     }
-    window.close();
+  });
+
+  assetInput.addEventListener('input', function() {
+    var now = Date.now(), elapsed = now - lastKeyTime;
+    lastKeyTime = now;
+    if (elapsed < 50) {
+      scanBuffer = assetInput.value;
+      clearTimeout(scanTimer);
+      scanTimer = setTimeout(function() {
+        if (scanBuffer.length > 0 && assetInput.value.trim()) {
+          scanBuffer = ''; lastKeyTime = 0;
+          var pill = document.getElementById('scanStatus');
+          pill.classList.add('visible');
+          assetInput.classList.add('scan-flash');
+          setTimeout(function() {
+            assetInput.classList.remove('scan-flash');
+            pill.classList.remove('visible');
+          }, 300);
+          submitForm();
+        }
+      }, 80);
+    } else {
+      scanBuffer = '';
+    }
+  });
+
+  // ════════════════════════════════════════════════════════
+  // CAMERA MODAL
+  // getUserMedia called directly from onclick — user gesture
+  // ════════════════════════════════════════════════════════
+
+  function openCamera() {
+    if (!sheetReady) return showResult('⚠️ Please load the sheet first before scanning.', 'error');
+    if (!document.getElementById('location').value)
+      return showResult('⚠️ Please select a location before scanning.', 'error');
+
+    var btn = document.getElementById('cameraBtn');
+    btn.disabled = true; btn.innerHTML = '⏳ Starting camera...';
+
+    // Check if permission already granted — auto-start
+    var startCamera = function() {
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      }).then(function(stream) {
+        camStream = stream;
+        var video = document.getElementById('cam-video');
+        video.srcObject = stream; video.play();
+        document.getElementById('camera-modal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        btn.disabled = false; btn.innerHTML = '📷 Scan with Camera';
+        layoutCam(); camActive = true;
+        setCamStatus('scanning', 'Scanning...');
+        camRafId = requestAnimationFrame(camTick);
+      }).catch(function(err) {
+        btn.disabled = false; btn.innerHTML = '📷 Scan with Camera';
+        showResult('📷 Camera error: ' + (err.name === 'NotAllowedError'
+          ? 'Permission denied — allow camera in browser settings.'
+          : err.message || err.name), 'error');
+      });
+    };
+
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'camera' }).then(function(result) {
+        startCamera(); // let getUserMedia handle prompt or auto-start
+      }).catch(startCamera);
+    } else {
+      startCamera();
+    }
   }
 
-  function stopCamera() {
-    scanning = false;
-    cancelAnimationFrame(rafId);
-    if (stream) { stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+  function closeCamera() {
+    camActive = false;
+    cancelAnimationFrame(camRafId);
+    if (camStream) { camStream.getTracks().forEach(function(t){t.stop();}); camStream = null; }
+    document.getElementById('camera-modal').classList.remove('open');
+    document.getElementById('cam-scan-win').classList.remove('found');
+    document.body.style.overflow = '';
   }
 
-  // ── Scan window layout ────────────────────────────────────────
-  function layoutWindow() {
-    var W    = window.innerWidth;
-    var H    = window.innerHeight;
+  function layoutCam() {
+    var W = window.innerWidth, H = window.innerHeight;
     var size = Math.min(W, H) * 0.65;
-    var left = (W - size) / 2;
-    var top  = (H - size) / 2;
-
-    document.getElementById('scan-win').style.cssText =
+    var left = (W - size) / 2, top = (H - size) / 2;
+    document.getElementById('cam-scan-win').style.cssText =
       'width:'+size+'px;height:'+size+'px;left:'+left+'px;top:'+top+'px;';
-    document.getElementById('ov-top').style.cssText    = 'top:0;left:0;right:0;height:'+top+'px;';
-    document.getElementById('ov-bottom').style.cssText = 'bottom:0;left:0;right:0;height:'+top+'px;';
-    document.getElementById('ov-left').style.cssText   = 'top:'+top+'px;left:0;height:'+size+'px;width:'+left+'px;';
-    document.getElementById('ov-right').style.cssText  = 'top:'+top+'px;right:0;height:'+size+'px;width:'+left+'px;';
+    document.getElementById('cam-ov-top').style.cssText    = 'top:0;left:0;right:0;height:'+top+'px;';
+    document.getElementById('cam-ov-bottom').style.cssText = 'bottom:0;left:0;right:0;height:'+top+'px;';
+    document.getElementById('cam-ov-left').style.cssText   = 'top:'+top+'px;left:0;height:'+size+'px;width:'+left+'px;';
+    document.getElementById('cam-ov-right').style.cssText  = 'top:'+top+'px;right:0;height:'+size+'px;width:'+left+'px;';
   }
 
-  window.addEventListener('resize', function(){ if(scanning) layoutWindow(); });
+  window.addEventListener('resize', function(){ if(camActive) layoutCam(); });
 
-  // ── QR decode loop ────────────────────────────────────────────
-  function tick() {
-    if (!scanning) return;
-    var video  = document.getElementById('video');
-    var canvas = document.getElementById('qr-canvas');
-    var ctx    = canvas.getContext('2d');
+  function camTick() {
+    if (!camActive) return;
+    var video = document.getElementById('cam-video');
+    var canvas = document.getElementById('cam-canvas');
+    var ctx = canvas.getContext('2d');
 
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width  = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      var W      = window.innerWidth;
-      var H      = window.innerHeight;
-      var size   = Math.min(W, H) * 0.65;
-      var scaleX = canvas.width  / W;
-      var scaleY = canvas.height / H;
+      var W = window.innerWidth, H = window.innerHeight;
+      var size = Math.min(W, H) * 0.65;
+      var scaleX = canvas.width / W, scaleY = canvas.height / H;
       var cropX  = Math.floor(((W - size) / 2) * scaleX);
       var cropY  = Math.floor(((H - size) / 2) * scaleY);
       var crop   = Math.floor(size * Math.min(scaleX, scaleY));
@@ -513,15 +716,13 @@
       var data = ctx.getImageData(cropX, cropY, crop, crop);
       var code = jsQR(data.data, data.width, data.height, { inversionAttempts: 'dontInvert' });
 
-      if (code && code.data) { onFound(code.data); return; }
+      if (code && code.data) { onQRFound(code.data); return; }
     }
-    rafId = requestAnimationFrame(tick);
+    camRafId = requestAnimationFrame(camTick);
   }
 
-  // ── QR found — postMessage to opener, no redirect ────────────
-  function onFound(raw) {
-    scanning = false;
-    cancelAnimationFrame(rafId);
+  function onQRFound(raw) {
+    camActive = false; cancelAnimationFrame(camRafId);
 
     var tag = raw.trim();
     try {
@@ -530,77 +731,27 @@
       tag = segs[segs.length - 1] || tag;
     } catch(e) {}
 
-    setStatus('found', '✅ Found: ' + tag);
-    document.getElementById('scan-win').classList.add('found');
+    setCamStatus('found', '✅ Found: ' + tag);
+    document.getElementById('cam-scan-win').classList.add('found');
 
-    var flash = document.getElementById('flash');
-    flash.classList.remove('active');
-    void flash.offsetWidth;
-    flash.classList.add('active');
+    var flash = document.getElementById('cam-flash');
+    flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active');
 
-    stopCamera();
+    if (camStream) { camStream.getTracks().forEach(function(t){t.stop();}); camStream = null; }
 
     setTimeout(function() {
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({ type: 'SCANNER_RESULT', tag: tag }, '*');
-        window.opener.focus();
-        window.close();
-      } else {
-        // Opener gone — show tag on screen as fallback
-        show('start-screen');
-        document.querySelector('.start-title').textContent = '✅ Tag Scanned';
-        document.querySelector('.start-sub').textContent   = tag;
-        document.querySelector('.start-ring').textContent  = '✅';
-      }
+      closeCamera();
+      document.getElementById('assetTag').value = tag;
+      var pill = document.getElementById('cameraStatus');
+      pill.classList.add('visible');
+      setTimeout(function(){ pill.classList.remove('visible'); }, 1800);
+      submitForm();
     }, 600);
   }
 
-  // ── Permission error ──────────────────────────────────────────
-  function showPermError(err) {
-    var ua        = navigator.userAgent;
-    var isIOS     = /iPad|iPhone|iPod/.test(ua);
-    var isSamsung = /SamsungBrowser/.test(ua);
-    var icon      = document.getElementById('perm-icon');
-    var title     = document.getElementById('perm-title');
-    var steps     = document.getElementById('perm-steps');
-
-    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      icon.textContent  = '🔒';
-      title.textContent = 'Camera Permission Denied';
-      var html = '<div class="perm-steps-title">How to fix it</div>';
-      if (isIOS) {
-        html += step(1, 'Open <strong>Settings</strong> on your iPhone');
-        html += step(2, 'Scroll down → tap <strong>Safari</strong>');
-        html += step(3, 'Tap <strong>Camera</strong> → set to <strong>Allow</strong>');
-        html += step(4, 'Return here and tap <strong>Try Again</strong>');
-      } else if (isSamsung) {
-        html += step(1, 'Tap the <strong>🔒 lock icon</strong> in the address bar');
-        html += step(2, 'Tap <strong>Permissions → Camera → Allow</strong>');
-        html += step(3, 'Tap <strong>Try Again</strong> below');
-      } else {
-        html += step(1, 'Tap the <strong>🔒 lock icon</strong> in the address bar');
-        html += step(2, 'Tap <strong>Permissions</strong>');
-        html += step(3, 'Set <strong>Camera</strong> to <strong>Allow</strong>');
-        html += step(4, 'Tap <strong>Try Again</strong> below');
-      }
-      steps.innerHTML = html; steps.style.display = 'block';
-    } else if (err.name === 'NotFoundError') {
-      icon.textContent = '📵'; title.textContent = 'No Camera Found';
-      steps.style.display = 'none';
-    } else {
-      icon.textContent = '⚠️'; title.textContent = 'Camera Error';
-      steps.style.display = 'none';
-    }
-    show('perm-screen');
-  }
-
-  function step(n, text) {
-    return '<div class="perm-step"><div class="perm-num">'+n+'</div><div>'+text+'</div></div>';
-  }
-
-  function setStatus(state, text) {
-    document.getElementById('status-pill').className = 'status-pill ' + state;
-    document.getElementById('status-text').textContent = text;
+  function setCamStatus(state, text) {
+    document.getElementById('cam-pill').className = 'cam-pill ' + state;
+    document.getElementById('cam-text').textContent = text;
   }
 </script>
 </body>
